@@ -11,6 +11,7 @@
 import time, os, json
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
 from IPython import embed
 
 from cs231n.gradient_check import eval_numerical_gradient, eval_numerical_gradient_array
@@ -34,6 +35,8 @@ plt.rcParams['image.cmap'] = 'gray'
 
 import ipdb
 
+#pdb.pm()
+#pdb.post_mortem()
 def rel_error(x, y):
   """ returns relative error """
   return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
@@ -388,7 +391,10 @@ if 1:
     # error less than `1e-10`.
 
     # In[ ]:
-
+    # D is image features,  W is wordvec_dim --
+    # word to vec embedding is taking the entire dictionary size V and mapping it to W dimensional space here
+    # a word is represented as a W-dimensional vector. Benefit learns synonyms --
+    # cat and kitten can have same D-vector --  learns to map relevant words together using learning
     N, D, W, H = 10, 20, 30, 40
     word_to_idx = {'<NULL>': 0, 'cat': 2, 'dog': 3}
     V = len(word_to_idx)

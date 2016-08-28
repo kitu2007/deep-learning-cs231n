@@ -103,16 +103,22 @@ class CaptioningRNN(object):
     # Weight and bias for the affine transform from image features to initial
     # hidden state
     W_proj, b_proj = self.params['W_proj'], self.params['b_proj']
-    
+
+    # W_proj.shape(D,H) takes D dimensional image feature and put it in hidden space
+
     # Word embedding matrix
     W_embed = self.params['W_embed']
+    # takes the V dimension dictionary and take into W dimensional word-embedding vector
 
     # Input-to-hidden, hidden-to-hidden, and biases for the RNN
     Wx, Wh, b = self.params['Wx'], self.params['Wh'], self.params['b']
+    # Wx takes word-embedding vector and puts it into hidden space
+    # Wx = (W,H)
 
     # Weight and bias for the hidden-to-vocab transformation.
     W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
-    
+    # take from hidden to dictionary -- used to get output
+
     loss, grads = 0.0, {}
     ############################################################################
     # TODO: Implement the forward and backward passes for the CaptioningRNN.   #
@@ -136,27 +142,41 @@ class CaptioningRNN(object):
     # gradients for self.params[k].                                            #
     ############################################################################
     h0 = np.dot(features, W_proj) + b_proj
-    dh0_raw =
-    grads['W_proj'] = np.dot(features,dh0_raw);
-    grads['b_proj'] = dh0_raw;
+    pdb.set_trace()
     # h0, cache = temporal_affine_forward(features, W_proj, b_proj)
     captions_embedded, caption_embedding_cache = word_embedding_forward(captions_in, W_embed)
 
     # captions_embedded = np.insert(captions_embedded,1,self._null,axis=1)
     h, cache = rnn_forward(captions_embedded, h0, Wx, Wh, b)
+
+    # scores_vocab are the outputs
     scores_vocab, cache1 = temporal_affine_forward(h, W_vocab, b_vocab)
-    loss, grads = temporal_softmax_loss(scores_vocab,captions_out, mask,True)
+
+    # loss is computed over all time I guess and grads is gradient for Why or W_vocab
+    loss, grads = temporal_softmax_loss(scores_vocab, captions_out, mask,True)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
+    if 0:
+      h1 = h.reshape(-1,40)
+      grads1 = grads.reshape(-1,3)
+      grads['W_vocab'] = np.dot(h1.T,grads1)
+      grads['b_vocab'] = np.sum(np.sum(grads,axis=0),axis=1)
 
     # backward gradient will be computed in reverse order.
-    dW_vocab = word_embedding_backward(dout, caption_embedding_cache)
+    dx, dw, db = temporal_affine_backward(grads, cache1)
+    grads['W_vocab'] = dw
+    grads['b_vocab'] = db
+
     # backward gradient for Wx, Wh
     dx, dh_prev, dWx, dWh, db =  rnn_backward(dh, cache)
     grads['Wx'] = dWx; grads['Wh'] = dWh; grads['b'] = db;
-    grads['W_vocab'] = dW_vocab; grads['b_vocab'] = self.params['b_vocab'];
+    #
+    #grads['b_vocab'] = self.params['b_vocab'];
+    grads['W_embed'] = word_embedding_backward(dx, caption_embedding_cache)
 
+    grads['W_proj'] = np.dot(features, dh_prev);
+    grads['b_proj'] = dh_prev;
     return loss, grads
 
 

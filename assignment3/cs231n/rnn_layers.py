@@ -103,6 +103,7 @@ def rnn_forward(x, h0, Wx, Wh, b):
   Returns a tuple of:
   - h: Hidden states for the entire timeseries, of shape (N, T, H).
   - cache: Values needed in the backward pass
+  cache = (x, next_h, prev_h, Wx, Wh, b)
   """
   h, cache = None, None
   ##############################################################################
@@ -134,7 +135,7 @@ def rnn_backward(dh, cache):
   Inputs:
   - dh: Upstream gradients of all hidden states, of shape (N, T, H)
         Possbily this is coming from the Y part which isn't explicity specified here
-  
+  cache = (x, next_h, prev_h, Wx, Wh, b)
   Returns a tuple of:
   - dx: Gradient of inputs, of shape (N, T, D)
   - dh_prev: Gradient of initial hidden state, of shape (N, H)
@@ -202,7 +203,8 @@ def word_embedding_forward(x, W):
   - x: Integer array of shape (N, T) giving indices of words. Each element idx
     of x muxt be in the range 0 <= idx < V.
   - W: Weight matrix of shape (V, D) giving word vectors for all words.
-       WHAT THE HELL DOES THIS WEIGHT MATRIX GIVES?
+       WHAT THE HELL DOES THIS WEIGHT MATRIX GIVES? a D-dimensional vector for
+  each word in dictionary
   
   Returns a tuple of:
   - out: Array of shape (N, T, D) giving word vectors for all input words.
