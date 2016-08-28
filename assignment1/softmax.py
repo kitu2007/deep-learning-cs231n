@@ -21,15 +21,17 @@ import random
 import numpy as np
 from cs231n.data_utils import load_CIFAR10
 import matplotlib.pyplot as plt
-get_ipython().magic(u'matplotlib inline')
+import pdb
+
+#get_ipython().magic(u'matplotlib inline')
 plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
 # for auto-reloading extenrnal modules
 # see http://stackoverflow.com/questions/1907993/autoreload-of-modules-in-ipython
-get_ipython().magic(u'load_ext autoreload')
-get_ipython().magic(u'autoreload 2')
+#get_ipython().magic(u'load_ext autoreload')
+#get_ipython().magic(u'autoreload 2')
 
 
 # In[ ]:
@@ -108,6 +110,7 @@ import time
 
 # Generate a random softmax weight matrix and use it to compute the loss.
 W = np.random.randn(3073, 10) * 0.0001
+
 loss, grad = softmax_loss_naive(W, X_dev, y_dev, 0.0)
 
 # As a rough sanity check, our loss should be something close to -log(0.1).
@@ -133,11 +136,11 @@ from cs231n.gradient_check import grad_check_sparse
 f = lambda w: softmax_loss_naive(w, X_dev, y_dev, 0.0)[0]
 grad_numerical = grad_check_sparse(f, W, grad, 10)
 
+
 # similar to SVM case, do another gradient check with regularization
 loss, grad = softmax_loss_naive(W, X_dev, y_dev, 1e2)
 f = lambda w: softmax_loss_naive(w, X_dev, y_dev, 1e2)[0]
 grad_numerical = grad_check_sparse(f, W, grad, 10)
-
 
 # In[ ]:
 
@@ -152,6 +155,7 @@ print 'naive loss: %e computed in %fs' % (loss_naive, toc - tic)
 
 from cs231n.classifiers.softmax import softmax_loss_vectorized
 tic = time.time()
+pdb.set_trace()
 loss_vectorized, grad_vectorized = softmax_loss_vectorized(W, X_dev, y_dev, 0.00001)
 toc = time.time()
 print 'vectorized loss: %e computed in %fs' % (loss_vectorized, toc - tic)
