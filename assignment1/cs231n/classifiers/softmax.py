@@ -57,16 +57,20 @@ def softmax_loss_naive(W, X, y, reg):
   return loss,dW
 
 
+  # very good article on how loss are derived from maximum likelihood
+  # http://nic.schraudolph.org/teach/ml03/ML_Class3.pdf
+  # all class http://nic.schraudolph.org/teach/ml03/
+  
   # the derivate of cross entropy dp_i/dy_j is given by derivative of softmax
   # where p_i= e^y_i / sum_j (e^y_j)
   # is  dp_i/dy_j = p_i[i==j] - p_i*p_j
   # http://knet.readthedocs.io/en/latest/softmax.html
 
-  # softmax loss is given by
-  # W = sum_C (t_k * log(p_k))
-  # gradient with respect to unnormalized y_j is
+  # softmax loss (also cross entropy loss )is given by
+  # W = - sum_C (t_k * log(p_k))
+  # gradient with respect to p_k (normalized probability)
   #  dW/dp_j = sum_c (t_c * log(p_c)) where c = 1 to C
-  #  dW/dp_j = sum_c (t_c * log(p_c/sum_l(p_l))) # sum_l(p_l) is not 1
+  #  dW/dp_j = sum_c (t_c * log(p_c/sum_l(p_l))) # sum_l(p_l) is 1
   #         = sum_c (t_c* log(p_c) ) - sum_k (t_k * log sum_l(p_l))
   #          = sum_c (t_c * log(p_c)) - log sum_l(p_l) * sum_k(t_k)
   #          = sum_c (t_c * log(p_c)) - log sum_l(p_l) * 1
@@ -101,21 +105,24 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  N,D = X.shape
+  D,C = W.shape
   pdb.set_trace()
   if 1:
     y_pred = np.dot(X, W)
-    max_y = max(y_pred)
-    y_pred = y_pred - max_y
-    y_pred = np.exp(y_pred) / sum(np.exp(y_pred))
-    y_tmp = np.zeros((C))
-    y_tmp[y[i]] = 1.0
+    max_y = np.max(y_pred,axis=1)
+    y_pred = y_pred - max_y.reshape((-1,1))
+    denom = np.sum(np.exp(y_pred), axis=1).reshape((-1,1))
+    y_pred = np.exp(y_pred) / denom
+    y_tmp = np.zeros((N,C))
+    rows = range(N)
+    y_tmp[rows,y] = 1.0
     loss_softmax = - (y_tmp * np.log(y_pred))
-    loss += np.sum(loss_softmax)
+    loss += np.sum(loss_softmax,axis =1)
+    loss = np.sum(loss,axis=0)/N
     dl = -(y_tmp - y_pred)
-    dW += np.dot(X[i,:].reshape(D,1),dl.reshape(1,C))
-    # divide the loss by batch size
-  loss /=N
-  dW /=N
+    dW = np.dot(X.T, dl)/N
+ 
   return loss,dW
 
 
