@@ -141,43 +141,63 @@ class CaptioningRNN(object):
     # defined above to store loss and gradients; grads[k] should give the      #
     # gradients for self.params[k].                                            #
     ############################################################################
+    # (1) use affine transformation to compute the intiial hidden state
     h0 = np.dot(features, W_proj) + b_proj
-    pdb.set_trace()
+
+    # (2) word embedding layer to transform the words in cpations_in from indices to
+    # vectors, giving an arrat of shape
     # h0, cache = temporal_affine_forward(features, W_proj, b_proj)
     captions_embedded, caption_embedding_cache = word_embedding_forward(captions_in, W_embed)
 
+    # (3) Use either a vanilla RNN or LSTM to process sequence of input word vectos and
+    # produce hidden state vector at all time steps.
     # captions_embedded = np.insert(captions_embedded,1,self._null,axis=1)
-    h, cache = rnn_forward(captions_embedded, h0, Wx, Wh, b)
+    if self.cell_type == "rnn":
+      h, cache = rnn_forward(captions_embedded, h0, Wx, Wh, b)
+    elif self.cell_type == "lstm":
+      h, cache = lstm_forward(captions_embedded, h0, Wx, Wh, b)
+    else:
+      error("not supported")
 
     # scores_vocab are the outputs
+    # (4) Use a temporal affine transformation to compute scores over the vocab
+    # at every timestep usign the hidden states giving output
     scores_vocab, cache1 = temporal_affine_forward(h, W_vocab, b_vocab)
 
+    # 5 softmax to compute loss
     # loss is computed over all time I guess and grads is gradient for Why or W_vocab
-    loss, grads = temporal_softmax_loss(scores_vocab, captions_out, mask,True)
+    loss_softmax, grads_softmax = temporal_softmax_loss(scores_vocab, captions_out, mask,True)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
     if 0:
       h1 = h.reshape(-1,40)
-      grads1 = grads.reshape(-1,3)
+      grads1 = grads_softmax.reshape(-1,3)
       grads['W_vocab'] = np.dot(h1.T,grads1)
-      grads['b_vocab'] = np.sum(np.sum(grads,axis=0),axis=1)
+      grads['b_vocab'] = np.sum(np.sum(grads_softmax, axis=0),axis=1)
 
     # backward gradient will be computed in reverse order.
-    dx, dw, db = temporal_affine_backward(grads, cache1)
+    dh, dw, db = temporal_affine_backward(grads_softmax, cache1)
     grads['W_vocab'] = dw
     grads['b_vocab'] = db
 
     # backward gradient for Wx, Wh
-    dx, dh_prev, dWx, dWh, db =  rnn_backward(dh, cache)
+    if self.cell_type == "rnn":
+      dx, dh_prev, dWx, dWh, db =  rnn_backward(dh, cache)
+    elif self.cell_type == "lstm":
+      dx, dh_prev, dWx, dWh, db =  lstm_backward(dh, cache)
+    else:
+      error("%s not supported"% self.cell_type)
+
     grads['Wx'] = dWx; grads['Wh'] = dWh; grads['b'] = db;
     #
     #grads['b_vocab'] = self.params['b_vocab'];
     grads['W_embed'] = word_embedding_backward(dx, caption_embedding_cache)
 
-    grads['W_proj'] = np.dot(features, dh_prev);
-    grads['b_proj'] = dh_prev;
-    return loss, grads
+    # h0 = np.dot(features, W_proj) + b_proj
+    grads['W_proj'] = np.dot(features.T, dh_prev);
+    grads['b_proj'] = np.sum(dh_prev,axis=0);
+    return loss_softmax, grads
 
 
   def sample(self, features, max_length=30):
@@ -212,7 +232,9 @@ class CaptioningRNN(object):
     W_embed = self.params['W_embed']
     Wx, Wh, b = self.params['Wx'], self.params['Wh'], self.params['b']
     W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
-    
+
+    H = Wh.shape[0]
+    c_prev = np.zeros((N, H))
     ###########################################################################
     # TODO: Implement test-time sampling for the model. You will need to      #
     # initialize the hidden state of the RNN by applying the learned affine   #
@@ -234,7 +256,35 @@ class CaptioningRNN(object):
     # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
     # a loop.                                                                 #
     ###########################################################################
-    pass
+    # hidden state from the image side.
+    h_prev = np.dot(features, W_proj) + b_proj
+    caption_start = self._start * np.ones((N),dtype=np.int32);
+    #pdb.set_trace()
+    captions = -1*np.ones((N,max_length),dtype=np.int32)
+    for i in range(max_length):
+      # embed the start word
+      embedded_word = W_embed[caption_start,:]
+      if self.cell_type=='rnn':
+        h_next, cache = rnn_step_forward(embedded_word, h_prev, Wx, Wh, b)
+      elif self.cell_type=='lstm':
+        h_next, c_next, cache = lstm_step_forward(embedded_word, h_prev, c_prev, Wx, Wh, b)
+      else:
+        error("doesn't support this time:%s"% self.cell_type)
+
+      out1 = h_next.dot(W_vocab) + b_vocab
+      ind1 = np.argsort(out1,axis=1)
+      select_words = ind1[:,-1]
+      # update the states
+      caption_start = select_words;
+      # h_prev = np.dot(h_next, W_proj) + b_proj
+      h_prev = h_next
+
+      captions[:,i] = select_words;
+
+    #scores_vocab, cache1 = temporal_affine_forward(h1, W_vocab, b_vocab)
+
+
+
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################

@@ -22,11 +22,11 @@ from cs231n.coco_utils import load_coco_data, sample_coco_minibatch, decode_capt
 from cs231n.image_utils import image_from_url
 
 #get_ipython().magic(u'matplotlib inline')
-plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
-plt.rcParams['image.interpolation'] = 'nearest'
-plt.rcParams['image.cmap'] = 'gray'
+#plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
+#plt.rcParams['image.interpolation'] = 'nearest'
+#plt.rcParams['image.cmap'] = 'gray'
 
-#import ipy_autoreload
+#nimport ipy_autoreload
 
 # for auto-reloading external modules
 # see http://stackoverflow.com/questions/1907993/autoreload-of-modules-in-ipython
@@ -445,14 +445,13 @@ if 1:
             )
 
     loss, grads = model.loss(features, captions)
-    pdb.set_trace()
     for param_name in sorted(grads):
       f = lambda _: model.loss(features, captions)[0]
       param_grad_num = eval_numerical_gradient(f, model.params[param_name], verbose=False, h=1e-6)
       e = rel_error(param_grad_num, grads[param_name])
       print '%s relative error: %e' % (param_name, e)
 
-if 0:
+if 1:
 
     # # Overfit small data
     # Similar to the `Solver` class that we used to train image classification models on the previous assignment, on this assignment we use a `CaptioningSolver` class to train image captioning models. Open the file `cs231n/captioning_solver.py` and read through the `CaptioningSolver` class; it should look very familiar.
@@ -473,7 +472,7 @@ if 0:
 
     small_rnn_solver = CaptioningSolver(small_rnn_model, small_data,
                update_rule='adam',
-               num_epochs=50,
+               num_epochs=500,
                batch_size=25,
                optim_config={
                  'learning_rate': 5e-3,
@@ -485,12 +484,13 @@ if 0:
     small_rnn_solver.train()
 
     # Plot the training losses
-    plt.plot(small_rnn_solver.loss_history)
-    plt.xlabel('Iteration')
-    plt.ylabel('Loss')
-    plt.title('Training loss history')
-    plt.show()
-
+    if 0:
+      plt.plot(small_rnn_solver.loss_history)
+      plt.xlabel('Iteration')
+      plt.ylabel('Loss')
+      plt.title('Training loss history')
+      plt.show()
+      pdb.set_trace()
 
     # # Test-time sampling
     # Unlike classification models, image captioning models behave very differently at training time and at test time. At training time, we have access to the ground-truth caption so we feed ground-truth words as input to the RNN at each timestep. At test time, we sample from the distribution over the vocabulary at each timestep, and feed the sample as input to the RNN at the next timestep.
@@ -499,17 +499,22 @@ if 0:
 
     # In[ ]:
 
-    for split in ['train', 'val']:
-      minibatch = sample_coco_minibatch(small_data, split=split, batch_size=2)
+    for split in ['val']:
+      minibatch = sample_coco_minibatch(small_data, split=split, batch_size=25)
       gt_captions, features, urls = minibatch
       gt_captions = decode_captions(gt_captions, data['idx_to_word'])
 
       sample_captions = small_rnn_model.sample(features)
       sample_captions = decode_captions(sample_captions, data['idx_to_word'])
-
+      pdb.set_trace()
       for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
+        print 'sample_caption:%s \n gt:%s\n'% (sample_caption,gt_caption)
+        plt.figure(3)
         plt.imshow(image_from_url(url))
-        plt.title('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
         plt.axis('off')
+        plt.title('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
         plt.show()
+        plt.draw()
+        raw_input("Enter to continue")
 
+    pdb.set_trace()

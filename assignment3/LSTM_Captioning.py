@@ -11,6 +11,10 @@
 import time, os, json
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
+from IPython import embed
+import cPickle as pickle
+
 
 from cs231n.gradient_check import eval_numerical_gradient, eval_numerical_gradient_array
 from cs231n.rnn_layers import *
@@ -19,15 +23,15 @@ from cs231n.classifiers.rnn import CaptioningRNN
 from cs231n.coco_utils import load_coco_data, sample_coco_minibatch, decode_captions
 from cs231n.image_utils import image_from_url
 
-get_ipython().magic(u'matplotlib inline')
+#get_ipython().magic(u'matplotlib inline')
 plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
 # for auto-reloading external modules
 # see http://stackoverflow.com/questions/1907993/autoreload-of-modules-in-ipython
-get_ipython().magic(u'load_ext autoreload')
-get_ipython().magic(u'autoreload 2')
+#get_ipython().magic(u'load_ext autoreload')
+#get_ipython().magic(u'autoreload 2')
 
 def rel_error(x, y):
   """ returns relative error """
@@ -110,7 +114,6 @@ expected_next_c = np.asarray([
 print 'next_h error: ', rel_error(expected_next_h, next_h)
 print 'next_c error: ', rel_error(expected_next_c, next_c)
 
-
 # #LSTM: step backward
 # Implement the backward pass for a single LSTM timestep in the function `lstm_step_backward` in the file `cs231n/rnn_layers.py`. Once you are done, run the following to perform numeric gradient checking on your implementation. You should see errors around `1e-8` or less.
 
@@ -152,6 +155,7 @@ dWx_num = num_grad(fWx_h, Wx, dnext_h) + num_grad(fWx_c, Wx, dnext_c)
 dWh_num = num_grad(fWh_h, Wh, dnext_h) + num_grad(fWh_c, Wh, dnext_c)
 db_num = num_grad(fb_h, b, dnext_h) + num_grad(fb_c, b, dnext_c)
 
+tmp_var = (dx_num, dh_num, dc_num, dWx_num, dWh_num, db_num)
 dx, dh, dc, dWx, dWh, db = lstm_step_backward(dnext_h, dnext_c, cache)
 
 print 'dx error: ', rel_error(dx_num, dx)
@@ -228,7 +232,6 @@ print 'dWx error: ', rel_error(dx_num, dx)
 print 'dWh error: ', rel_error(dx_num, dx)
 print 'db error: ', rel_error(dx_num, dx)
 
-
 # #LSTM captioning model
 # Now that you have implemented an LSTM, update the implementation of the `loss` method of the `CaptioningRNN` class in the file `cs231n/classifiers/rnn.py` to handle the case where `self.cell_type` is `lstm`. This should require adding less than 10 lines of code.
 # 
@@ -248,6 +251,8 @@ model = CaptioningRNN(word_to_idx,
           cell_type='lstm',
           dtype=np.float64)
 
+
+
 # Set all model parameters to fixed values
 for k, v in model.params.iteritems():
   model.params[k] = np.linspace(-1.4, 1.3, num=v.size).reshape(*v.shape)
@@ -262,13 +267,14 @@ print 'loss: ', loss
 print 'expected loss: ', expected_loss
 print 'difference: ', abs(loss - expected_loss)
 
+#pdb.set_trace()
 
 # # Overfit LSTM captioning model
 # Run the following to overfit an LSTM captioning model on the same small dataset as we used for the RNN above.
 
 # In[ ]:
 
-small_data = load_coco_data(max_train=50)
+small_data = load_coco_data(max_train=5000)
 
 small_lstm_model = CaptioningRNN(
           cell_type='lstm',
@@ -290,14 +296,24 @@ small_lstm_solver = CaptioningSolver(small_lstm_model, small_data,
            verbose=True, print_every=10,
          )
 
-small_lstm_solver.train()
+if 1:
+    small_lstm_solver.train()
+
+pickle_file = "lstm_solver.p"
+
+if 0:
+    small_lstm_solver = pickle.load(open(pickle_file,'r'))
 
 # Plot the training losses
+plt.ion()
 plt.plot(small_lstm_solver.loss_history)
 plt.xlabel('Iteration')
 plt.ylabel('Loss')
 plt.title('Training loss history')
 plt.show()
+
+if 1:
+  pickle.dump(small_lstm_model,open('lstm_solver2.p','w'))
 
 
 # # LSTM test-time sampling
@@ -316,11 +332,14 @@ for split in ['train', 'val']:
   sample_captions = decode_captions(sample_captions, data['idx_to_word'])
 
   for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
+    plt.figure(3)
     plt.imshow(image_from_url(url))
-    plt.title('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
     plt.axis('off')
+    plt.title('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
     plt.show()
-
+    plt.draw()
+    raw_input("enter")
+    
 
 # # Train a good captioning model!
 # Using the pieces you have implemented in this and the previous notebook, try to train a captioning model that gives decent qualitative results (better than the random garbage you saw with the overfit models) when sampling on the validation set. You can subsample the training set if you want; we just want to see samples on the validatation set that are better than random.

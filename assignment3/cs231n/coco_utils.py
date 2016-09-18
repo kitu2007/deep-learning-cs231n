@@ -1,7 +1,7 @@
 import os, json
 import numpy as np
 import h5py
-
+import pdb
 
 def load_coco_data(base_dir='cs231n/datasets/coco_captioning',
                    max_train=None,

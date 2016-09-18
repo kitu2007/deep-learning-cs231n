@@ -24,8 +24,8 @@ plt.rcParams['image.cmap'] = 'gray'
 
 # for auto-reloading external modules
 # see http://stackoverflow.com/questions/1907993/autoreload-of-modules-in-ipython
-get_ipython().magic(u'load_ext autoreload')
-get_ipython().magic(u'autoreload 2')
+#get_ipython().magic(u'load_ext autoreload')
+#get_ipython().magic(u'autoreload 2')
 
 
 # # Introducing TinyImageNet
