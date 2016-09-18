@@ -265,7 +265,7 @@ def sigmoid(x):
   """
   pos_mask = (x >= 0)
   neg_mask = (x < 0)
-  z = np.np.zeros_like(x)
+  z = np.zeros_like(x)
   z[pos_mask] = np.exp(-x[pos_mask])
   z[neg_mask] = np.exp(x[neg_mask])
   top = np.ones_like(x)
@@ -298,7 +298,16 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   # TODO: Implement the forward pass for a single timestep of an LSTM.        #
   # You may want to use the numerically stable sigmoid implementation above.  #
   #############################################################################
-  pass
+  N,H = prev_h.shape
+  a_all = np.dot(x,Wx) + np.dot(prev_h, Wh) + b
+  a_i = a_all[:,:H]; a_f=a_all[:,H:2*H]; a_o = a_all[:,2*H:3*H]; a_g=a_all[:,3*H:4*H]
+  i = sigmoid(a_i)
+  f = sigmoid(a_f)
+  o = sigmoid(a_o)
+  g = np.tanh(a_g)
+  next_c = f* prev_c + i * g
+  next_h = o * np.tanh(next_c)
+  cache = (x,prev_h, prev_c,Wx,Wh,b)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -330,7 +339,9 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   # HINT: For sigmoid and tanh you can compute local derivatives in terms of  #
   # the output value from the nonlinearity.                                   #
   #############################################################################
-  pass
+  pdb.set_trace()
+  dx =
+  dWx = np.dot(x, dE)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
