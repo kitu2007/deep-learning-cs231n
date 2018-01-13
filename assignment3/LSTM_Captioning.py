@@ -15,7 +15,6 @@ import pdb
 from IPython import embed
 import cPickle as pickle
 
-
 from cs231n.gradient_check import eval_numerical_gradient, eval_numerical_gradient_array
 from cs231n.rnn_layers import *
 from cs231n.captioning_solver import CaptioningSolver

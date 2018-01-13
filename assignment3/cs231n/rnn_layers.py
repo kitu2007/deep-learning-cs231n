@@ -116,7 +116,7 @@ def rnn_forward(x, h0, Wx, Wh, b):
   h = np.zeros((N,T,H))
   # cache will be the output of the last step
   cache = list()
-  for t in xrange(T):
+  for t in range(T):
     h_next, cache_ = rnn_step_forward(x[:,t,:], h0, Wx, Wh, b)
     h0=h_next
     h[:,t,:]=h_next
@@ -176,7 +176,7 @@ def rnn_backward(dh, cache):
   dWh = np.zeros((H,H))
   db = np.zeros((H))
 
-  for i in reversed(range(0,T)):
+  for i in reversed(list(range(0,T))):
     # current gradient at timestep is the upstream gradient (provided as input)
     # this may be coming from the Y as in the min_char_rnn.py (see line 59)
     # + downstream gradient provided by rnn_step_backward.
@@ -309,6 +309,7 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   next_c = f * prev_c + i * g
   next_h = o * np.tanh(next_c)
   cache = (x, i, f, o, g, prev_h, next_h, prev_c, next_c,  Wx, Wh, b)
+
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -340,6 +341,7 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   # HINT: For sigmoid and tanh you can compute local derivatives in terms of  #
   # the output value from the nonlinearity.                                   #
   #############################################################################
+
   x, i, f, o, g, prev_h, next_h, prev_c, next_c, Wx, Wh, b = cache
 
   #next_h = o * tanh(next_c)
@@ -367,6 +369,7 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   dWx = np.dot(dz, x).T
   dWh = np.dot(dz, prev_h).T
   db = np.sum(dz, axis=1)
+
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -409,7 +412,7 @@ def lstm_forward(x, h0, Wx, Wh, b):
   h = np.zeros((N, T, H))
   cache = list()
 
-  for t in xrange(T):
+  for t in range(T):
     next_h, next_c, t_cache = lstm_step_forward(x[:,t,:],prev_h,prev_c,Wx,Wh,b)
     prev_h = next_h
     prev_c = next_c
@@ -457,7 +460,7 @@ def lstm_backward(dh, cache):
   dWh = np.zeros((H,4*H))
   db = np.zeros((4*H))
 
-  for t in reversed(xrange(0,T)):
+  for t in reversed(range(0,T)):
     # current gradient at timestep is the upstream gradient (provided as input)
     # this may be coming from the Y as in the min_char_rnn.py (see line 59)
     # + downstream gradient provided by rnn_step_backward.
@@ -572,7 +575,7 @@ def temporal_softmax_loss(x, y, mask, verbose=False):
   dx_flat /= N
   dx_flat *= mask_flat[:, None]
 
-  if verbose: print 'dx_flat: ', dx_flat.shape
+  if verbose: print('dx_flat: ', dx_flat.shape)
 
   dx = dx_flat.reshape(N, T, V)
 

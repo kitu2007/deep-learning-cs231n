@@ -2,7 +2,7 @@ import numpy as np
 
 from cs231n.layers import *
 from cs231n.rnn_layers import *
-import ipdb
+#import ipdb
 
 class CaptioningRNN(object):
   """
@@ -235,6 +235,7 @@ class CaptioningRNN(object):
 
     H = Wh.shape[0]
     c_prev = np.zeros((N, H))
+
     ###########################################################################
     # TODO: Implement test-time sampling for the model. You will need to      #
     # initialize the hidden state of the RNN by applying the learned affine   #
@@ -264,6 +265,7 @@ class CaptioningRNN(object):
     for i in range(max_length):
       # embed the start word
       embedded_word = W_embed[caption_start,:]
+
       if self.cell_type=='rnn':
         h_next, cache = rnn_step_forward(embedded_word, h_prev, Wx, Wh, b)
       elif self.cell_type=='lstm':
